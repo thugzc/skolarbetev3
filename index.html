@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skolarbeteMalte</title>
+</head>
+<body>
+
+  <div id="container">
+    <h1 id="question">Vill du bli min valentine?</h1>
+    <div id="playground">
+      <button id="yesBtn" class="btnYes" onclick="yes()">Ja</button>
+      <button id="noBtn" class="btnNo" onclick="nope()">Nej</button>
+    </div>
+  </div>
+
+  <div id="successScreen" style="display: none;">
+    <h1 class="success-title">whiiiihii🎉</h1>
+    <div class="image-container">
+      <div class="heart-image"></div>
+    </div>
+    <p class="success-message">thank yo bbg hehe</p>
+  </div>
+
+<script>
+
+const noTexts = [
+  "Är du säker?",
+  "Även om jag frågade snällt?",
+  "Snela du 🥺",
+  "Men seriöst..?",
+  "Nej??",
+  "meen jag beeer"
+];
+let noTextIndex = 0;
+
+let noCount = 0;
+let yesScale = 1;
+let twistActive = false;
+let twistDone = false;
+let fullScreenNext = false;
+
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const question = document.getElementById("question");
+const container = document.getElementById("container");
+const successScreen = document.getElementById("successScreen");
+
+function yes() {
+ 
+  container.style.display = "none";
+  successScreen.style.display = "flex";
+}
+
+function nope() {
+  handleNoClick();
+}
+
+function handleNoClick() {
+  if (twistActive) {
+    normalNoLogic();
+
+    twistActive = false;
+    twistDone = true;
+
+    yesBtn.innerText = "Ja";
+    noBtn.innerText = "Nej";
+
+    yesBtn.classList.remove("btnNo");
+    yesBtn.classList.add("btnYes");
+    noBtn.classList.remove("btnYes");
+    noBtn.classList.add("btnNo");
+
+    yesBtn.onclick = yes;
+    noBtn.onclick = nope;
+
+    return;
+  }
+
+  normalNoLogic();
+}
+
+function normalNoLogic() {
+  noCount++;
+
+  noBtn.innerText = noTexts[noTextIndex];
+  noTextIndex = (noTextIndex + 1) % noTexts.length;
+
+  if (noCount === 1) question.innerText = "VILL du bli min valentine?😒";
+  else if (noCount === 2) question.innerText = "VILL DU bli min valentine? 😤";
+  else if (noCount === 3) question.innerText = "VILL DU BLI min valentine? 😠";
+  else if (noCount === 4) question.innerText = "VILL DU BLI MIN valentine? 😡";
+  else question.innerText = "VILL DU BLI MIN VALENTINE?🤬";
+
+  
+  if (noCount <= 5) {
+    const scale = Math.max(0.4, 1 - noCount * 0.15);
+    noBtn.style.transform = `scale(${scale})`;
+  }
+
+
+  if (noCount === 6) {
+    noBtn.style.display = "none";
+    yesBtn.classList.add("almostFullScreen");
+  }
+ 
+  else if (noCount <= 5) {
+    yesScale += 0.15;
+    yesBtn.style.transform = `scale(${yesScale})`;
+  }
+
+
+  if (noCount === 5 && !twistDone) {
+    twistActive = true;
+
+ 
+    yesBtn.style.transition = "none";
+    noBtn.style.transition = "none";
+
+    const tempText = yesBtn.innerText;
+    yesBtn.innerText = noBtn.innerText;
+    noBtn.innerText = tempText;
+
+    yesBtn.onclick = handleNoClick;
+    noBtn.onclick = yes;
+
+    yesBtn.classList.remove("btnYes");
+    yesBtn.classList.add("btnNo");
+    noBtn.classList.remove("btnNo");
+    noBtn.classList.add("btnYes");
+
+ 
+    setTimeout(() => {
+      yesBtn.style.transition = "";
+      noBtn.style.transition = "";
+    }, 50);
+
+    fullScreenNext = true;
+  }
+
+  if (noCount < 6) {
+    moveNoButton();
+  }
+}
+
+function moveNoButton() {
+  const playground = document.getElementById("playground");
+  
+  
+  const yesRect = yesBtn.getBoundingClientRect();
+  const playRect = playground.getBoundingClientRect();
+  
+  
+  const yesCenterX = yesRect.left - playRect.left + yesRect.width / 2;
+  const yesCenterY = yesRect.top - playRect.top + yesRect.height / 2;
+  
+ 
+  const yesRadius = Math.max(yesRect.width, yesRect.height) / 2 + 200; 
+  
+  const playWidth = playground.clientWidth;
+  const playHeight = playground.clientHeight;
+  const noWidth = noBtn.offsetWidth;
+  const noHeight = noBtn.offsetHeight;
+  
+  let bestX = 0;
+  let bestY = 0;
+  let maxDistance = 0;
+  
+  
+  for (let i = 0; i < 100; i++) {
+    const testX = Math.random() * (playWidth - noWidth);
+    const testY = Math.random() * (playHeight - noHeight);
+    
+    const testCenterX = testX + noWidth / 2;
+    const testCenterY = testY + noHeight / 2;
+    
+    const dx = testCenterX - yesCenterX;
+    const dy = testCenterY - yesCenterY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+   
+    if (distance > maxDistance && distance > yesRadius) {
+      maxDistance = distance;
+      bestX = testX;
+      bestY = testY;
+    }
+  }
+  
+ 
+  if (maxDistance === 0) {
+  
+    const corners = [
+      { x: 10, y: 10 }, 
+      { x: playWidth - noWidth - 10, y: 10 }, 
+      { x: 10, y: playHeight - noHeight - 10 },
+      { x: playWidth - noWidth - 10, y: playHeight - noHeight - 10 } 
+    ];
+    
+    let farthestCorner = corners[0];
+    let farthestDistance = 0;
+    
+    corners.forEach(corner => {
+      const cornerCenterX = corner.x + noWidth / 2;
+      const cornerCenterY = corner.y + noHeight / 2;
+      const dx = cornerCenterX - yesCenterX;
+      const dy = cornerCenterY - yesCenterY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist > farthestDistance) {
+        farthestDistance = dist;
+        farthestCorner = corner;
+      }
+    });
+    
+    bestX = farthestCorner.x;
+    bestY = farthestCorner.y;
+  }
+  
+  noBtn.style.position = "absolute";
+  noBtn.style.left = bestX + "px";
+  noBtn.style.top = bestY + "px";
+}
+
+</script>
+
+<style>
+
+h1{
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    color: rgb(90, 41, 41);
+}
+
+body{
+    background-color: rgba(255, 83, 112, 0.411);
+    margin: 0;
+    padding: 0;
+}
+
+
+
+.btnYes{
+    background-color: rgb(28, 110, 35);
+    color: rgb(4, 39, 9);
+    border: 2px solid rgb(23, 53, 14);
+    box-shadow: 0 0px 20px rgb(54, 116, 30);
+}
+
+
+.btnNo{
+    background-color: rgb(156, 53, 53);
+    color: rgb(63, 5, 5);
+    border: 2px solid rgb(87, 14, 14);
+    box-shadow: 0 0px 20px rgb(168, 41, 41);
+}
+
+
+#playground button {
+  position: absolute;
+  font-size: clamp(2rem, 6vw, 3rem);
+  padding: 1em 2em;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, all 0.5s ease;
+}
+
+
+.almostFullScreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  font-size: clamp(4rem, 10vw, 8rem) !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  z-index: 999 !important;
+}
+
+.fullScreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  font-size: clamp(4rem, 10vw, 8rem) !important;
+  z-index: 999;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding-top: 40px;
+}
+
+#question {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+#playground {
+  position: relative;
+  width: 70vw;
+  height: 70vh;
+  max-width: 900px;
+  max-height: 600px;
+}
+
+#yesBtn {
+  left: 5%;
+  top: 40%;
+}
+
+#noBtn {
+  left: 60%;
+  top: 40%;
+}
+
+/* SUCCESS SCREEN STYLING */
+#successScreen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.success-title {
+  font-size: clamp(3rem, 8vw, 6rem);
+  color: #ff1493;
+  margin-bottom: 40px;
+  text-align: center;
+  animation: bounce 1s ease infinite;
+  text-shadow: 2px 2px 4px rgba(255, 20, 147, 0.3);
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+
+
+
+.image-container {
+  margin: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heart-image {
+  width: 400px;
+  height: 400px;
+  background-image: url('catrose.jpg');
+  background-size: cover;
+  background-position: center;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(255, 20, 147, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+
+
+.success-message {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  color: #ff69b4;
+  text-align: center;
+  margin-top: 40px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(255, 105, 180, 0.3);
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+}
+
+@media (max-width: 600px) {
+  #playground {
+    width: 85vw;
+    height: 60vh;
+  }
+  
+  .heart-image {
+    width: 300px;
+    height: 300px;
+  }
+}
+</style>
+
+</html>
